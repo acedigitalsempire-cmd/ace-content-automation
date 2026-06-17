@@ -3,12 +3,11 @@ import sys
 import datetime
 import traceback
 from content_generator import (
-    generate_script, generate_image,
-    get_todays_topic, get_angle_for_slot
+    generate_script, get_todays_topic, get_angle_for_slot
 )
 from video_builder import build_video
 from publisher import publish_instagram, publish_facebook, publish_youtube
-from config import PHOTOS
+from config import TOPICS
 
 
 def get_slot_number():
@@ -25,15 +24,12 @@ def run():
 
     try:
         slot = get_slot_number()
-        print(f"Slot: {slot}")
-
         topic = get_todays_topic()
         angle = get_angle_for_slot(slot)
-        photo_path = PHOTOS[slot % len(PHOTOS)]
 
+        print(f"Slot: {slot}")
         print(f"Topic: {topic}")
         print(f"Angle: {angle}")
-        print(f"Photo: {photo_path}")
 
         # Step 1 - Generate script
         print("\nSTEP 1: Generating script...")
@@ -43,20 +39,14 @@ def run():
         scenes = content["scenes"]
         print(f"Script ready. Scenes: {len(scenes)}")
 
-        # Step 2 - Generate images
-        print("\nSTEP 2: Generating images...")
-        image_paths = []
-        for i, scene in enumerate(scenes):
-            path = generate_image(scene["image_prompt"], i)
-            image_paths.append(path)
-
-        # Step 3 - Build video
-        print("\nSTEP 3: Building video...")
-        video_path = build_video(scenes, image_paths, photo_path)
+        # Step 2 - Build video with motion graphics
+        print("\nSTEP 2: Building video...")
+        video_path = build_video(scenes)
         print(f"Video ready: {video_path}")
+        print(f"Video size: {os.path.getsize(video_path)} bytes")
 
-        # Step 4 - Publish
-        print("\nSTEP 4: Publishing...")
+        # Step 3 - Publish
+        print("\nSTEP 3: Publishing...")
         ig_result = publish_instagram(video_path, caption)
         fb_result = publish_facebook(video_path, caption)
         yt_result = publish_youtube(video_path, youtube_title, caption)
