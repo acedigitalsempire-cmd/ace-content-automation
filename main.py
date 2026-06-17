@@ -1,6 +1,7 @@
 import schedule
 import time
 import threading
+import traceback
 from flask import Flask
 from content_generator import generate_topic_and_script, generate_image
 from video_builder import build_video
@@ -18,45 +19,53 @@ def home():
 
 
 def run_automation():
-    print("Starting automation run...")
+    print("=== AUTOMATION START ===")
 
     try:
-        # Step 1 - Generate topic and script
-        print("Generating content...")
+        print("STEP 1: Generating topic and script...")
         content = generate_topic_and_script()
         topic = content["topic"]
         caption = content["caption"]
         scenes = content["scenes"]
-        print(f"Topic: {topic}")
+        print(f"STEP 1 DONE: Topic = {topic}")
 
-        # Step 2 - Generate images for each scene
-        print("Generating images...")
+        print("STEP 2: Generating images...")
         image_paths = []
         for i, scene in enumerate(scenes):
+            print(f"Generating image {i+1} of {len(scenes)}...")
             image_path = generate_image(scene["image_prompt"], i)
             image_paths.append(image_path)
-            print(f"Image {i+1} generated")
+            print(f"Image {i+1} saved to {image_path}")
 
-        # Step 3 - Build video
-        print("Building video...")
+        print("STEP 3: Building video...")
         video_path = build_video(scenes, image_paths)
-        print(f"Video built: {video_path}")
+        print(f"STEP 3 DONE: Video at {video_path}")
 
-        # Step 4 - Publish to all platforms
+        print("STEP 4: Publishing to Instagram...")
         publish_instagram(video_path, caption)
-        publish_facebook(video_path, caption)
-        publish_youtube(video_path, topic, caption)
+        print("Instagram done.")
 
-        print("Automation complete!")
+        print("STEP 5: Publishing to Facebook...")
+        publish_facebook(video_path, caption)
+        print("Facebook done.")
+
+        print("STEP 6: Publishing to YouTube...")
+        publish_youtube(video_path, topic, caption)
+        print("YouTube done.")
+
+        print("=== AUTOMATION COMPLETE ===")
 
     except Exception as e:
-        print(f"Automation error: {e}")
+        print(f"=== AUTOMATION FAILED ===")
+        print(f"Error: {e}")
+        traceback.print_exc()
 
 
 def schedule_jobs():
-    # Run once daily at 9AM
     schedule.every().day.at("09:00").do(run_automation)
+    print("Running immediate test on startup...")
     run_automation()
+    print("Startup test finished. Waiting for scheduled runs.")
 
     while True:
         schedule.run_pending()
@@ -64,12 +73,10 @@ def schedule_jobs():
 
 
 if __name__ == "__main__":
-    # Start scheduler in background thread
     scheduler_thread = threading.Thread(
         target=schedule_jobs,
         daemon=True
     )
     scheduler_thread.start()
 
-    # Start Flask server
     app.run(host="0.0.0.0", port=10000)
