@@ -3,12 +3,12 @@ requests
 google-auth
 google-auth-oauthlib
 google-api-python-client
-elevenlabs
 google-genai
 Pillow
 moviepy
 numpy
-schedule
 imageio
 imageio-ffmpeg
-ffmpeg-python
+scipy
+elevenlabs
+schedule
