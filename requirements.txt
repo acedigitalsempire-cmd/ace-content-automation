@@ -11,3 +11,4 @@ numpy
 schedule
 imageio
 imageio-ffmpeg
+ffmpeg-python
