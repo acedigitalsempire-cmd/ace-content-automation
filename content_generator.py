@@ -2,9 +2,8 @@ from google import genai
 from google.genai import types
 import json
 import datetime
+import time
 from PIL import Image, ImageDraw
-import io
-import base64
 from config import (
     GEMINI_API_KEY, BRAND_NAME, BRAND_HANDLE,
     BRAND_NICHE, BRAND_AUDIENCE, TOPICS, ANGLES,
@@ -12,6 +11,13 @@ from config import (
 )
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Model fallback chain — try each one in order
+MODELS = [
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+]
 
 
 def get_todays_topic():
@@ -23,6 +29,25 @@ def get_angle_for_slot(slot_number):
     return ANGLES[slot_number % len(ANGLES)]
 
 
+def generate_with_fallback(prompt):
+    last_error = None
+    for model in MODELS:
+        try:
+            print(f"Trying model: {model}...")
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt
+            )
+            print(f"Success with model: {model}")
+            return response.text
+        except Exception as e:
+            print(f"Model {model} failed: {e}")
+            last_error = e
+            time.sleep(3)
+
+    raise Exception(f"All models failed. Last error: {last_error}")
+
+
 def generate_script(topic, angle, slot_number):
     angle_instructions = {
         "direct_explanation": "Write a direct educational explanation. State the problem in one sentence. Explain why it happens. Give the solution. Tone: calm authoritative consultant.",
@@ -30,7 +55,7 @@ def generate_script(topic, angle, slot_number):
         "case_study": "Frame as a real business scenario. Describe a business with this problem. Walk through what went wrong. Show the fix and result. Tone: storytelling relatable specific.",
         "myth_busting": "Challenge a common belief. State what most people believe. Bust the myth with real truth. Back it up with a practical example. Tone: confident slightly provocative educational.",
         "fix_how_to": "Give a practical step by step fix. Identify the core problem. Give 3 clear actionable steps. End with what changes when fixed. Tone: practical helpful solution focused.",
-        "pain_emotional": "Connect with the business owner frustration. Start with their daily pain. Use ONE Nigerian expression naturally. Show they are not alone then give the insight. Tone: empathetic real conversational. Use only one expression like: You fit get traffic and still no get sales. This one na silent business killer. Make we talk truth."
+        "pain_emotional": "Connect with the business owner frustration. Start with their daily pain. Use ONE Nigerian expression naturally like: You fit get traffic and still no get sales. This one na silent business killer. Make we talk truth. Show they are not alone then give the insight. Tone: empathetic real conversational."
     }
 
     if slot_number in [0, 5]:
@@ -68,7 +93,7 @@ ANTI AI DETECTION:
 - Real specific examples not vague claims
 - Sounds like a person talking not a document being read
 
-Return ONLY this exact JSON, no markdown, no backticks:
+Return ONLY this exact JSON, no markdown, no backticks, no explanation:
 {{
     "topic": "{topic}",
     "angle": "{angle}",
@@ -84,12 +109,7 @@ Return ONLY this exact JSON, no markdown, no backticks:
     ]
 }}"""
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-
-    text = response.text.strip()
+    text = generate_with_fallback(prompt)
     print(f"Raw response preview: {text[:300]}")
 
     if "```json" in text:
