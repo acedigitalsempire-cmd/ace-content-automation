@@ -1,4 +1,5 @@
-import google.genai as genai
+from google import genai
+from google.genai import types
 import json
 import os
 from config import GEMINI_API_KEY, BRAND_NAME, BRAND_NICHE, BRAND_AUDIENCE
@@ -37,7 +38,7 @@ def generate_topic_and_script():
     """
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt
     )
 
@@ -56,27 +57,27 @@ def generate_image(prompt, index):
     import io
     import base64
 
-    image_prompt = f"{prompt}, professional, clean, modern, tech style, no text"
+    image_prompt = f"{prompt}, professional, clean, modern, tech style, no text overlay"
 
     response = client.models.generate_content(
         model="gemini-2.0-flash-exp-image-generation",
         contents=image_prompt,
-        config=genai.types.GenerateContentConfig(
-            response_modalities=["image", "text"]
+        config=types.GenerateContentConfig(
+            response_modalities=["IMAGE", "TEXT"]
         )
     )
 
     image_path = f"/tmp/scene_{index}.png"
 
     for part in response.candidates[0].content.parts:
-        if part.inline_data is not None:
+        if hasattr(part, "inline_data") and part.inline_data is not None:
             image_data = base64.b64decode(part.inline_data.data)
             img = Image.open(io.BytesIO(image_data))
             img = img.resize((1080, 1920))
             img.save(image_path)
             return image_path
 
-    # Fallback - create branded placeholder image
+    # Fallback branded placeholder
     img = Image.new("RGB", (1080, 1920), (10, 22, 40))
     img.save(image_path)
     return image_path
