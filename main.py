@@ -2,7 +2,10 @@ import os
 import sys
 import datetime
 import traceback
-from content_generator import generate_script, generate_image, get_todays_topic, get_angle_for_slot
+from content_generator import (
+    generate_script, generate_image,
+    get_todays_topic, get_angle_for_slot
+)
 from video_builder import build_video
 from publisher import publish_instagram, publish_facebook, publish_youtube
 from config import PHOTOS
@@ -21,7 +24,6 @@ def run():
     print("=" * 50)
 
     try:
-        # Get slot and determine topic/angle
         slot = get_slot_number()
         print(f"Slot: {slot}")
 
@@ -52,7 +54,6 @@ def run():
         print("\nSTEP 3: Building video...")
         video_path = build_video(scenes, image_paths, photo_path)
         print(f"Video ready: {video_path}")
-        print(f"Video size: {os.path.getsize(video_path)} bytes")
 
         # Step 4 - Publish
         print("\nSTEP 4: Publishing...")
