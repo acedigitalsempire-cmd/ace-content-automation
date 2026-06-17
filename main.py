@@ -1,82 +1,77 @@
-import schedule
-import time
-import threading
+import os
+import sys
+import datetime
 import traceback
-from flask import Flask
-from content_generator import generate_topic_and_script, generate_image
+from content_generator import generate_script, generate_image, get_todays_topic, get_angle_for_slot
 from video_builder import build_video
 from publisher import publish_instagram, publish_facebook, publish_youtube
-
-app = Flask(__name__)
-
-@app.route("/healthz")
-def health():
-    return "OK", 200
-
-@app.route("/")
-def home():
-    return "ACE Content Automation Running", 200
+from config import PHOTOS
 
 
-def run_automation():
-    print("=== AUTOMATION START ===")
+def get_slot_number():
+    hour = datetime.datetime.utcnow().hour
+    slot_map = {5: 0, 8: 1, 11: 2, 14: 3, 17: 4, 20: 5}
+    return slot_map.get(hour, 0)
+
+
+def run():
+    print("=" * 50)
+    print("ACE CONTENT AUTOMATION STARTING")
+    print(f"Time UTC: {datetime.datetime.utcnow()}")
+    print("=" * 50)
 
     try:
-        print("STEP 1: Generating topic and script...")
-        content = generate_topic_and_script()
-        topic = content["topic"]
-        caption = content["caption"]
-        scenes = content["scenes"]
-        print(f"STEP 1 DONE: Topic = {topic}")
+        # Get slot and determine topic/angle
+        slot = get_slot_number()
+        print(f"Slot: {slot}")
 
-        print("STEP 2: Generating images...")
+        topic = get_todays_topic()
+        angle = get_angle_for_slot(slot)
+        photo_path = PHOTOS[slot % len(PHOTOS)]
+
+        print(f"Topic: {topic}")
+        print(f"Angle: {angle}")
+        print(f"Photo: {photo_path}")
+
+        # Step 1 - Generate script
+        print("\nSTEP 1: Generating script...")
+        content = generate_script(topic, angle, slot)
+        caption = content["caption"]
+        youtube_title = content["youtube_title"]
+        scenes = content["scenes"]
+        print(f"Script ready. Scenes: {len(scenes)}")
+
+        # Step 2 - Generate images
+        print("\nSTEP 2: Generating images...")
         image_paths = []
         for i, scene in enumerate(scenes):
-            print(f"Generating image {i+1} of {len(scenes)}...")
-            image_path = generate_image(scene["image_prompt"], i)
-            image_paths.append(image_path)
-            print(f"Image {i+1} saved to {image_path}")
+            path = generate_image(scene["image_prompt"], i)
+            image_paths.append(path)
 
-        print("STEP 3: Building video...")
-        video_path = build_video(scenes, image_paths)
-        print(f"STEP 3 DONE: Video at {video_path}")
+        # Step 3 - Build video
+        print("\nSTEP 3: Building video...")
+        video_path = build_video(scenes, image_paths, photo_path)
+        print(f"Video ready: {video_path}")
+        print(f"Video size: {os.path.getsize(video_path)} bytes")
 
-        print("STEP 4: Publishing to Instagram...")
-        publish_instagram(video_path, caption)
-        print("Instagram done.")
+        # Step 4 - Publish
+        print("\nSTEP 4: Publishing...")
+        ig_result = publish_instagram(video_path, caption)
+        fb_result = publish_facebook(video_path, caption)
+        yt_result = publish_youtube(video_path, youtube_title, caption)
 
-        print("STEP 5: Publishing to Facebook...")
-        publish_facebook(video_path, caption)
-        print("Facebook done.")
-
-        print("STEP 6: Publishing to YouTube...")
-        publish_youtube(video_path, topic, caption)
-        print("YouTube done.")
-
-        print("=== AUTOMATION COMPLETE ===")
+        print("\n" + "=" * 50)
+        print("AUTOMATION COMPLETE")
+        print(f"Instagram: {'OK' if ig_result else 'FAILED'}")
+        print(f"Facebook: {'OK' if fb_result else 'FAILED'}")
+        print(f"YouTube: {'OK' if yt_result else 'FAILED'}")
+        print("=" * 50)
 
     except Exception as e:
-        print(f"=== AUTOMATION FAILED ===")
-        print(f"Error: {e}")
+        print(f"\nAUTOMATION FAILED: {e}")
         traceback.print_exc()
-
-
-def schedule_jobs():
-    schedule.every().day.at("09:00").do(run_automation)
-    print("Running immediate test on startup...")
-    run_automation()
-    print("Startup test finished. Waiting for scheduled runs.")
-
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    scheduler_thread = threading.Thread(
-        target=schedule_jobs,
-        daemon=True
-    )
-    scheduler_thread.start()
-
-    app.run(host="0.0.0.0", port=10000)
+    run()
