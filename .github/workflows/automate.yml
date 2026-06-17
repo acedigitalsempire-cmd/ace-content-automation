@@ -2,13 +2,13 @@ name: ACE Content Automation
 
 on:
   schedule:
-    - cron: '0 5 * * *'   # 6AM WAT
-    - cron: '0 8 * * *'   # 9AM WAT
-    - cron: '0 11 * * *'  # 12PM WAT
-    - cron: '0 14 * * *'  # 3PM WAT
-    - cron: '0 17 * * *'  # 6PM WAT
-    - cron: '0 20 * * *'  # 9PM WAT
-  workflow_dispatch:       # Manual trigger for testing
+    - cron: '0 5 * * *'
+    - cron: '0 8 * * *'
+    - cron: '0 11 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
 
 jobs:
   create-and-post:
