@@ -15,15 +15,13 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # ElevenLabs
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+ELEVENLABS_VOICE_ID = "ErXwobaYiN019PkySvjV"
 
 # Brand Identity
 BRAND_NAME = "Ace Digitals Global"
 BRAND_HANDLE = "@DigitalUche"
 BRAND_NICHE = "business growth, digital marketing, AI automation, websites, revenue systems"
 BRAND_AUDIENCE = "Nigerian entrepreneurs and SME owners aged 18-35"
-
-# Voice
-ELEVENLABS_VOICE_ID = "ErXwobaYiN019PkySvjV"
 
 # Video
 VIDEO_WIDTH = 1080
@@ -37,6 +35,11 @@ PHOTOS = [
     "assets/photo3.png",
     "assets/photo4.png"
 ]
+
+# Brand colors
+NAVY = (10, 22, 40)
+GOLD = (184, 146, 42)
+WHITE = (255, 255, 255)
 
 # Content topics bank
 TOPICS = [
@@ -81,8 +84,3 @@ ANGLES = [
     "fix_how_to",
     "pain_emotional"
 ]
-
-# Brand colors
-NAVY = (10, 22, 40)
-GOLD = (184, 146, 42)
-WHITE = (255, 255, 255)
