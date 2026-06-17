@@ -13,11 +13,11 @@ YOUTUBE_REFRESH_TOKEN = os.environ.get("YOUTUBE_REFRESH_TOKEN")
 # Gemini
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# ElevenLabs
+# ElevenLabs — Adam voice (natural, calm, consultant)
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
-ELEVENLABS_VOICE_ID = "ErXwobaYiN019PkySvjV"
+ELEVENLABS_VOICE_ID = "pNInz6obpgDQGcFmaJgB"
 
-# Brand Identity
+# Brand
 BRAND_NAME = "Ace Digitals Global"
 BRAND_HANDLE = "@DigitalUche"
 BRAND_NICHE = "business growth, digital marketing, AI automation, websites, revenue systems"
@@ -28,20 +28,13 @@ VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
 
-# Photos rotation
-PHOTOS = [
-    "assets/photo1.png",
-    "assets/photo2.png",
-    "assets/photo3.png",
-    "assets/photo4.png"
-]
-
 # Brand colors
 NAVY = (10, 22, 40)
 GOLD = (184, 146, 42)
 WHITE = (255, 255, 255)
+DARK = (5, 10, 20)
 
-# Content topics bank
+# Content topics
 TOPICS = [
     "Why Most Businesses Don't Have a Marketing Problem They Have a Sales Problem",
     "5 Reasons Customers Visit Your Website But Never Contact You",
@@ -75,7 +68,6 @@ TOPICS = [
     "I Analyzed 100 Small Businesses Here Is What They All Got Wrong",
 ]
 
-# Video angle types
 ANGLES = [
     "direct_explanation",
     "mistake_angle",
