@@ -57,18 +57,15 @@ def generate_image(prompt, index):
 
     try:
         print(f"Calling Gemini image generation for scene {index}...")
+
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp-image-generation",
-            contents=f"{prompt}, professional, clean, modern, tech style, no text overlay",
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE", "TEXT"]
-            )
+            model="gemini-3.1-flash-image",
+            contents=f"{prompt}, professional, clean, modern, tech style, no text overlay"
         )
 
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data is not None:
-                image_data = base64.b64decode(part.inline_data.data)
-                img = Image.open(io.BytesIO(image_data))
+        for part in response.parts:
+            if part.inline_data is not None:
+                img = part.as_image()
                 img = img.resize((1080, 1920))
                 img.save(image_path)
                 print(f"Image {index} generated successfully")
