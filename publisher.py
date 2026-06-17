@@ -11,79 +11,63 @@ from config import (
 )
 
 
-def upload_to_temp_host(video_path):
-    print("Uploading video to temp host...")
+def upload_video_to_meta(video_path, ig_container_id):
+    print("Uploading video directly to Meta servers...")
+    file_size = os.path.getsize(video_path)
 
-    # Try file.io first
-    try:
-        with open(video_path, "rb") as f:
-            response = requests.post(
-                "https://file.io/?expires=1d",
-                files={"file": ("video.mp4", f, "video/mp4")}
-            )
-        print(f"file.io status: {response.status_code}")
-        print(f"file.io response: {response.text[:300]}")
+    headers = {
+        "Authorization": f"OAuth {META_ACCESS_TOKEN}",
+        "offset": "0",
+        "file_size": str(file_size)
+    }
 
-        if response.status_code == 200:
-            result = response.json()
-            if result.get("success") and result.get("link"):
-                url = result["link"]
-                print(f"Temp URL: {url}")
-                return url
-    except Exception as e:
-        print(f"file.io failed: {e}")
+    upload_url = f"https://rupload.facebook.com/ig-api-upload/v22.0/{ig_container_id}"
 
-    # Try 0x0.st backup
-    try:
-        print("Trying 0x0.st backup...")
-        with open(video_path, "rb") as f:
-            response = requests.post(
-                "https://0x0.st",
-                files={"file": ("video.mp4", f, "video/mp4")}
-            )
-        print(f"0x0.st status: {response.status_code}")
-        if response.status_code == 200:
-            url = response.text.strip()
-            print(f"Backup URL: {url}")
-            return url
-    except Exception as e:
-        print(f"0x0.st failed: {e}")
+    with open(video_path, "rb") as f:
+        response = requests.post(upload_url, headers=headers, data=f)
 
-    print("All upload attempts failed")
-    return None
+    print(f"Meta upload status: {response.status_code}")
+    print(f"Meta upload response: {response.text[:300]}")
+    return response.status_code in [200, 201]
 
 
 def publish_instagram(video_path, caption):
     print("Publishing to Instagram...")
     try:
-        video_url = upload_to_temp_host(video_path)
+        file_size = os.path.getsize(video_path)
+        print(f"Video size: {file_size} bytes")
 
-        if not video_url:
-            print("No video URL available for Instagram")
-            return None
-
-        # Step 1 - Create container
-        response = requests.post(
+        # Step 1 - Create resumable upload container
+        container_response = requests.post(
             f"https://graph.facebook.com/v22.0/{INSTAGRAM_USER_ID}/media",
             data={
                 "media_type": "REELS",
-                "video_url": video_url,
+                "upload_type": "resumable",
                 "caption": caption,
                 "share_to_feed": "true",
                 "access_token": META_ACCESS_TOKEN
             }
         )
-        result = response.json()
-        container_id = result.get("id")
-        print(f"IG Container ID: {container_id}")
+        container_result = container_response.json()
+        print(f"IG Container response: {container_result}")
+        container_id = container_result.get("id")
 
         if not container_id:
-            print(f"IG container error: {result}")
+            print(f"IG container creation failed: {container_result}")
             return None
 
-        # Step 2 - Poll until FINISHED
+        print(f"IG Container ID: {container_id}")
+
+        # Step 2 - Upload video directly to Meta
+        upload_success = upload_video_to_meta(video_path, container_id)
+
+        if not upload_success:
+            print("Video upload to Meta failed")
+            return None
+
+        # Step 3 - Poll until FINISHED
         print("Polling IG container status...")
-        for attempt in range(20):
+        for attempt in range(30):
             status_response = requests.get(
                 f"https://graph.facebook.com/v22.0/{container_id}",
                 params={
@@ -100,9 +84,9 @@ def publish_instagram(video_path, caption):
             elif status_code == "ERROR":
                 print(f"IG processing error: {status}")
                 return None
-            time.sleep(15)
+            time.sleep(10)
 
-        # Step 3 - Publish
+        # Step 4 - Publish
         publish_response = requests.post(
             f"https://graph.facebook.com/v22.0/{INSTAGRAM_USER_ID}/media_publish",
             data={
@@ -116,42 +100,54 @@ def publish_instagram(video_path, caption):
 
     except Exception as e:
         print(f"Instagram error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
 def publish_facebook(video_path, caption):
     print("Publishing to Facebook...")
     try:
-        video_url = upload_to_temp_host(video_path)
+        file_size = os.path.getsize(video_path)
 
-        if not video_url:
-            print("No video URL available for Facebook")
-            return None
-
-        url = f"https://graph.facebook.com/v22.0/{FACEBOOK_PAGE_ID}/video_reels"
-
-        # Step 1 - Start upload
+        # Step 1 - Start resumable upload
         start_response = requests.post(
-            url,
+            f"https://graph.facebook.com/v22.0/{FACEBOOK_PAGE_ID}/video_reels",
             data={
                 "upload_phase": "start",
                 "access_token": META_ACCESS_TOKEN
             }
         )
-        video_id = start_response.json().get("video_id")
-        print(f"FB Video ID: {video_id}")
+        start_result = start_response.json()
+        print(f"FB start response: {start_result}")
+        video_id = start_result.get("video_id")
+        upload_url = start_result.get("upload_url")
 
-        if not video_id:
-            print(f"FB start error: {start_response.json()}")
+        if not video_id or not upload_url:
+            print(f"FB start failed: {start_result}")
             return None
 
-        # Step 2 - Finish upload
+        print(f"FB Video ID: {video_id}")
+
+        # Step 2 - Upload video to Facebook
+        headers = {
+            "Authorization": f"OAuth {META_ACCESS_TOKEN}",
+            "offset": "0",
+            "file_size": str(file_size)
+        }
+
+        with open(video_path, "rb") as f:
+            upload_response = requests.post(upload_url, headers=headers, data=f)
+
+        print(f"FB upload status: {upload_response.status_code}")
+        print(f"FB upload response: {upload_response.text[:300]}")
+
+        # Step 3 - Finish and publish
         finish_response = requests.post(
-            url,
+            f"https://graph.facebook.com/v22.0/{FACEBOOK_PAGE_ID}/video_reels",
             data={
                 "upload_phase": "finish",
                 "video_id": video_id,
-                "video_url": video_url,
                 "description": caption,
                 "video_state": "PUBLISHED",
                 "access_token": META_ACCESS_TOKEN
@@ -163,6 +159,8 @@ def publish_facebook(video_path, caption):
 
     except Exception as e:
         print(f"Facebook error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -183,11 +181,7 @@ def publish_youtube(video_path, title, caption):
             "snippet": {
                 "title": title,
                 "description": f"{caption}\n\n#AceDigitalsGlobal #DigitalUche #BusinessGrowth #NigerianBusiness #DigitalMarketing",
-                "tags": [
-                    "business growth", "digital marketing",
-                    "AI automation", "Nigerian business",
-                    "website", "DigitalUche", "AceDigitalsGlobal"
-                ],
+                "tags": ["business growth", "digital marketing", "AI automation", "Nigerian business", "DigitalUche"],
                 "categoryId": "28"
             },
             "status": {
@@ -196,18 +190,8 @@ def publish_youtube(video_path, title, caption):
             }
         }
 
-        media = MediaFileUpload(
-            video_path,
-            mimetype="video/mp4",
-            resumable=True
-        )
-
-        request = youtube.videos().insert(
-            part="snippet,status",
-            body=body,
-            media_body=media
-        )
-
+        media = MediaFileUpload(video_path, mimetype="video/mp4", resumable=True)
+        request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
         response = request.execute()
         video_id = response.get("id")
         print(f"YouTube published: https://youtube.com/shorts/{video_id}")
