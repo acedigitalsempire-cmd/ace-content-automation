@@ -1,4 +1,3 @@
-flask
 requests
 google-auth
 google-auth-oauthlib
@@ -10,5 +9,4 @@ numpy
 imageio
 imageio-ffmpeg
 scipy
-elevenlabs
 schedule
