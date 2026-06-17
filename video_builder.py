@@ -2,9 +2,7 @@ import os
 import requests
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-from moviepy.editor import (
-    ImageClip, AudioFileClip, concatenate_videoclips, CompositeVideoClip
-)
+from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
 from config import (
     ELEVENLABS_API_KEY, BRAND_COLORS,
     VIDEO_WIDTH, VIDEO_HEIGHT, FPS
@@ -41,14 +39,12 @@ def add_text_overlay(image_path, text, output_path):
     )
     draw = ImageDraw.Draw(img)
 
-    # Navy overlay at bottom
     overlay = Image.new("RGBA", (VIDEO_WIDTH, 300), (10, 22, 40, 200))
     img = img.convert("RGBA")
     img.paste(overlay, (0, VIDEO_HEIGHT - 300), overlay)
     img = img.convert("RGB")
     draw = ImageDraw.Draw(img)
 
-    # Gold text
     try:
         font = ImageFont.truetype(
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48
@@ -56,7 +52,6 @@ def add_text_overlay(image_path, text, output_path):
     except:
         font = ImageFont.load_default()
 
-    # Wrap text
     words = text.split()
     lines = []
     current = ""
@@ -76,7 +71,6 @@ def add_text_overlay(image_path, text, output_path):
         draw.text((x, y), line, font=font, fill=GOLD)
         y += 60
 
-    # Logo watermark
     draw.text((20, 30), "Ace Digitals Global", font=font, fill=GOLD)
 
     img.save(output_path)
@@ -87,24 +81,19 @@ def build_video(scenes, image_paths):
     clips = []
 
     for i, (scene, image_path) in enumerate(zip(scenes, image_paths)):
-        # Generate voiceover
         audio_path = generate_voiceover(scene["voiceover"], i)
 
-        # Add text overlay to image
         overlay_path = f"/tmp/overlay_{i}.png"
         add_text_overlay(image_path, scene["text"], overlay_path)
 
-        # Get audio duration
         audio_clip = AudioFileClip(audio_path)
         duration = audio_clip.duration
 
-        # Create image clip
-        img_clip = ImageClip(overlay_path).set_duration(duration)
-        img_clip = img_clip.set_audio(audio_clip)
+        img_clip = ImageClip(overlay_path, duration=duration)
+        img_clip = img_clip.with_audio(audio_clip)
 
         clips.append(img_clip)
 
-    # Concatenate all scenes
     final = concatenate_videoclips(clips, method="compose")
 
     output_path = "/tmp/final_video.mp4"
