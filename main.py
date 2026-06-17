@@ -56,6 +56,7 @@ def run_automation():
 def schedule_jobs():
     # Run once daily at 9AM
     schedule.every().day.at("09:00").do(run_automation)
+    run_automation()
 
     while True:
         schedule.run_pending()
