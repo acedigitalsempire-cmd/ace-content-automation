@@ -16,16 +16,73 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 # ElevenLabs
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 
-# Brand
+# Brand Identity
 BRAND_NAME = "Ace Digitals Global"
-BRAND_NICHE = "digital marketing, AI tools, tech for business"
-BRAND_AUDIENCE = "Nigerian entrepreneurs and SME owners"
-BRAND_COLORS = {
-    "navy": "#0A1628",
-    "gold": "#B8922A"
-}
+BRAND_HANDLE = "@DigitalUche"
+BRAND_NICHE = "business growth, digital marketing, AI automation, websites, revenue systems"
+BRAND_AUDIENCE = "Nigerian entrepreneurs and SME owners aged 18-35"
 
-# Video settings
+# Voice
+ELEVENLABS_VOICE_ID = "ErXwobaYiN019PkySvjV"
+
+# Video
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
+
+# Photos rotation
+PHOTOS = [
+    "assets/photo1.png",
+    "assets/photo2.png",
+    "assets/photo3.png",
+    "assets/photo4.png"
+]
+
+# Content topics bank
+TOPICS = [
+    "Why Most Businesses Don't Have a Marketing Problem They Have a Sales Problem",
+    "5 Reasons Customers Visit Your Website But Never Contact You",
+    "Why You're Getting Traffic But No Sales",
+    "The Hidden Cost of Running a Business Without Systems",
+    "How to Know Where Your Next Customer Will Come From",
+    "The Customer Journey Every Small Business Must Understand",
+    "Why Referrals Alone Are Dangerous for Business Growth",
+    "The Biggest Mistakes Small Businesses Make Online",
+    "How Businesses Lose Customers Before They Ever Reach Out",
+    "The Difference Between Busy Businesses and Profitable Businesses",
+    "What a Website Should Actually Do for a Business",
+    "Why Most Nigerian Business Websites Fail",
+    "7 Website Features That Increase Customer Enquiries",
+    "Landing Page vs Website Which One Do You Need",
+    "How to Turn Website Visitors into Paying Customers",
+    "Signs Your Website Is Costing You Money",
+    "The Psychology Behind High Converting Websites",
+    "10 Tasks AI Can Do for Your Business Today",
+    "How AI Can Help Small Businesses Compete With Bigger Brands",
+    "The Difference Between AI Tools and AI Systems",
+    "How to Automate Customer Follow Ups",
+    "AI Mistakes Business Owners Make",
+    "Building a Business That Runs Even When You Are Sleeping",
+    "Why Posting Every Day Does Not Guarantee Sales",
+    "The Truth About Going Viral",
+    "What Businesses Should Post If They Want More Customers",
+    "The Difference Between Content That Gets Likes and Content That Gets Sales",
+    "Why Most Facebook Ads Fail",
+    "The Marketing Funnel Explained Simply",
+    "I Analyzed 100 Small Businesses Here Is What They All Got Wrong",
+]
+
+# Video angle types
+ANGLES = [
+    "direct_explanation",
+    "mistake_angle",
+    "case_study",
+    "myth_busting",
+    "fix_how_to",
+    "pain_emotional"
+]
+
+# Brand colors
+NAVY = (10, 22, 40)
+GOLD = (184, 146, 42)
+WHITE = (255, 255, 255)
