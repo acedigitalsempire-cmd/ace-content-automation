@@ -1,0 +1,11 @@
+flask
+requests
+google-auth
+google-auth-oauthlib
+google-api-python-client
+elevenlabs
+google-generativeai
+Pillow
+moviepy
+numpy
+schedule
