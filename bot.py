@@ -9,7 +9,7 @@ from telegram.ext import (
 from script_generator import generate_script, format_script_for_telegram
 from video_processor import merge_and_process
 from publisher import publish_instagram, publish_facebook, publish_youtube
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import TELEGRAM_BOT_TOKEN
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -20,14 +20,9 @@ logger = logging.getLogger(__name__)
 WAITING_FOR_VIDEOS = 1
 
 
-def is_authorized(update: Update) -> bool:
-    incoming = str(update.effective_chat.id).strip()
-    allowed = str(TELEGRAM_CHAT_ID).strip()
-    print(f"AUTH CHECK — Incoming: {incoming} | Allowed: {allowed} | Match: {incoming == allowed}")
-    return incoming == allowed
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    print(f"START command from chat_id: {chat_id}")
     await update.message.reply_text(
         "👋 Welcome to ACE Content Studio!\n\n"
         "Here's what I can do:\n\n"
@@ -40,9 +35,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def script_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_authorized(update):
-        await update.message.reply_text("Unauthorized.")
-        return
+    chat_id = update.effective_chat.id
+    print(f"SCRIPT command from chat_id: {chat_id}")
 
     await update.message.reply_text("⏳ Generating your script. Please wait...")
 
@@ -62,15 +56,14 @@ async def script_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def upload_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_authorized(update):
-        await update.message.reply_text("Unauthorized.")
-        return
+    chat_id = update.effective_chat.id
+    print(f"UPLOAD command from chat_id: {chat_id}")
 
     if "current_script" not in context.user_data:
         await update.message.reply_text(
             "No script found. Run /script first."
         )
-        return
+        return ConversationHandler.END
 
     context.user_data["uploaded_videos"] = []
     context.user_data["upload_mode"] = True
@@ -90,8 +83,8 @@ async def upload_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def receive_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_authorized(update):
-        return
+    chat_id = update.effective_chat.id
+    print(f"VIDEO received from chat_id: {chat_id}")
 
     if not context.user_data.get("upload_mode"):
         await update.message.reply_text(
@@ -109,7 +102,9 @@ async def receive_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_scenes = len(script.get("scenes", []))
     current_count = len(videos) + 1
 
-    await update.message.reply_text(f"⬇️ Downloading clip {current_count} of {total_scenes}...")
+    await update.message.reply_text(
+        f"⬇️ Downloading clip {current_count} of {total_scenes}..."
+    )
 
     try:
         file = await video.get_file()
@@ -138,11 +133,12 @@ async def receive_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Error downloading clip: {e}")
 
+    return WAITING_FOR_VIDEOS
+
 
 async def done_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_authorized(update):
-        await update.message.reply_text("Unauthorized.")
-        return
+    chat_id = update.effective_chat.id
+    print(f"DONE command from chat_id: {chat_id}")
 
     videos = context.user_data.get("uploaded_videos", [])
     script = context.user_data.get("current_script")
@@ -151,13 +147,13 @@ async def done_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "No clips uploaded yet. Send /upload first."
         )
-        return
+        return ConversationHandler.END
 
     if not script:
         await update.message.reply_text(
             "No script found. Run /script first."
         )
-        return
+        return ConversationHandler.END
 
     total_scenes = len(script["scenes"])
     if len(videos) < total_scenes:
@@ -165,7 +161,7 @@ async def done_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Only {len(videos)}/{total_scenes} clips uploaded.\n"
             f"Send remaining clips or /cancel to start over."
         )
-        return
+        return WAITING_FOR_VIDEOS
 
     await update.message.reply_text(
         f"🎬 Processing {len(videos)} clips...\n"
@@ -190,12 +186,18 @@ async def done_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         yt_result = publish_youtube(final_video, youtube_title, caption)
 
         results = ["📊 Publishing Results\n"]
-        results.append(f"Instagram: {'✅ Published' if ig_result else '❌ Failed'}")
-        results.append(f"Facebook: {'✅ Published' if fb_result else '❌ Failed'}")
+        results.append(
+            f"Instagram: {'✅ Published' if ig_result else '❌ Failed'}"
+        )
+        results.append(
+            f"Facebook: {'✅ Published' if fb_result else '❌ Failed'}"
+        )
 
         if yt_result:
             yt_id = yt_result.get("id", "")
-            results.append(f"YouTube: ✅ https://youtube.com/shorts/{yt_id}")
+            results.append(
+                f"YouTube: ✅ https://youtube.com/shorts/{yt_id}"
+            )
         else:
             results.append("YouTube: ❌ Failed")
 
@@ -259,8 +261,10 @@ def main():
     )
 
     print("ACE Content Studio Bot is running...")
-    print(f"Authorized Chat ID: {TELEGRAM_CHAT_ID}")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True
+    )
 
 
 if __name__ == "__main__":
