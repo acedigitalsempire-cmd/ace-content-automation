@@ -1,12 +1,11 @@
+python-telegram-bot==20.7
 requests
 google-auth
 google-auth-oauthlib
 google-api-python-client
 google-genai
 Pillow
-moviepy
 numpy
+scipy
 imageio
 imageio-ffmpeg
-scipy
-schedule
