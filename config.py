@@ -1,5 +1,9 @@
 import os
 
+# Telegram
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+
 # Meta
 META_ACCESS_TOKEN = os.environ.get("META_ACCESS_TOKEN")
 INSTAGRAM_USER_ID = os.environ.get("INSTAGRAM_USER_ID")
@@ -13,10 +17,6 @@ YOUTUBE_REFRESH_TOKEN = os.environ.get("YOUTUBE_REFRESH_TOKEN")
 # Gemini
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# ElevenLabs — Adam voice (natural, calm, consultant)
-ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
-ELEVENLABS_VOICE_ID = "pNInz6obpgDQGcFmaJgB"
-
 # Brand
 BRAND_NAME = "Ace Digitals Global"
 BRAND_HANDLE = "@DigitalUche"
@@ -27,12 +27,6 @@ BRAND_AUDIENCE = "Nigerian entrepreneurs and SME owners aged 18-35"
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
-
-# Brand colors
-NAVY = (10, 22, 40)
-GOLD = (184, 146, 42)
-WHITE = (255, 255, 255)
-DARK = (5, 10, 20)
 
 # Content topics
 TOPICS = [
@@ -76,3 +70,11 @@ ANGLES = [
     "fix_how_to",
     "pain_emotional"
 ]
+
+# Music moods mapped to royalty free tracks from pixabay
+MUSIC_MOODS = {
+    "educational": "https://cdn.pixabay.com/audio/2024/03/12/audio_2dde668d38.mp3",
+    "motivational": "https://cdn.pixabay.com/audio/2024/01/29/audio_855508f0ab.mp3",
+    "corporate": "https://cdn.pixabay.com/audio/2023/10/30/audio_7f256c3fba.mp3",
+    "calm": "https://cdn.pixabay.com/audio/2024/02/15/audio_c8f4b82f5e.mp3",
+}
