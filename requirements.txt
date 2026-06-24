@@ -1,0 +1,12 @@
+python-telegram-bot==20.3
+flask
+requests
+google-auth
+google-auth-oauthlib
+google-api-python-client
+google-genai
+Pillow
+numpy
+scipy
+imageio
+imageio-ffmpeg
